@@ -12,10 +12,10 @@ import json
 import RPi.GPIO as GPIO
 import subprocess
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 1433
-button_lst = [3, 12, 48, 192]
-light_lst = [18, 23, 24, 25]
+UDP_IP = "127.0.0.1"          # Localhost
+UDP_PORT = 1433               # Port to use
+button_lst = [3, 12, 48, 192] # Button command values [A, B, C, D]
+light_lst = [18, 23, 24, 25]  # Raspberry Pi GPIO pins to utilize
 
 
 def parse_syslog(line):
@@ -83,7 +83,7 @@ def rtl_433_listen():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
 
-    while True: # Run always
+    while True:                           # Run always
         line, addr = sock.recvfrom(1024)  # Read syslog output form
 
         try:
@@ -115,7 +115,8 @@ def setup_GPIO():
 
 if __name__ == "__main__":
     # Start the rtl application
-    rtl = subprocess.Popen(["rtl_433", "-F", "syslog:127.0.0.1:1433", "-f", "315M"])
+    syslog_str = "syslog:" + UDP_IP + ":" + str(UDP_PORT)
+    rtl = subprocess.Popen(["rtl_433", "-F", syslog_str, "-f", "315M"])
 
     # Prep GPIO pins
     setup_GPIO()
