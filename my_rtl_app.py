@@ -4,7 +4,7 @@
 Description: Custom data handling example for rtl_433.
 Author: Bryan Conn
 Date: 8/18/2021
-PreReq: RTL_433 must be started prior to this script, enter `rtl_433 -f syslog:127.0.0.1:1433`
+PreReq: RTL_433 must be started prior to this script, enter `rtl_433 -F syslog:127.0.0.1:1433 -f 315M`
 """
 
 from __future__ import print_function
