@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-"""Custom data handling example for rtl_433."""
-
-# Start rtl_433 (rtl_433 -F syslog::1433), then this script
+"""
+Description: Custom data handling example for rtl_433.
+Author: Bryan Conn
+Date: 8/18/2021
+PreReq: RTL_433 must be started prior to this script, enter `rtl_433 -f syslog:127.0.0.1:1433`
+"""
 
 from __future__ import print_function
-
 import socket
 import json
 import RPi.GPIO as GPIO
@@ -17,7 +19,12 @@ light_lst = [18, 23, 24, 25]
 
 
 def parse_syslog(line):
-    """Try to extract the payload from a syslog line."""
+    """
+    Description: Try to extract the payload from a syslog line.
+    Parameters:
+        - line [str]: Syslog text to parse
+    Return: Dictionary of text output
+    """
     line = line.decode("ascii")  # also UTF-8 if BOM
     if line.startswith("<"):
         # fields should be "<PRI>VER", timestamp, hostname, command, pid, mid, sdata, payload
@@ -29,21 +36,33 @@ def parse_syslog(line):
 
 
 def lights_off():
-    """Power off all GPIO lights"""
-    GPIO.output(18, GPIO.LOW)
-    GPIO.output(23, GPIO.LOW)
-    GPIO.output(24, GPIO.LOW)
-    GPIO.output(25, GPIO.LOW)
+    """
+    Description: Power off all GPIO lights
+    Parameters: None
+    Return: None
+    """
+    for gpio_in in light_lst:
+        GPIO.output(gpio_in, GPIO.LOW)
 
 
 def light_btn(button):
-    """Light an led when a button is pressed using GPIO"""
-    idx = button_lst.index(button)
-    GPIO.output(light_lst[idx], GPIO.HIGH)
+    """
+    Description: Light an led when a button is pressed using GPIO
+    Parameters:
+        - button [int]: The button to light
+    Return: None
+    """
+    idx = button_lst.index(button)         # Find the index if the button to light
+    GPIO.output(light_lst[idx], GPIO.HIGH) # Light the button that was pressed
 
 
 def check_two_buttons(button):
-    """Check for 2 buttons being pressed"""
+    """
+    Description: Check for 2 buttons being pressed
+    Parameters:
+        - button [int]: A number created when 2 buttons are pressed.
+    Return: Bool of if the correct buttons where found.
+    """
     for opt_btn in button_lst:
         button_diff = button - opt_btn
         if button_diff in button_lst:
@@ -53,36 +72,41 @@ def check_two_buttons(button):
 
 
 def rtl_433_listen():
-    """Try to extract the payload from a syslog line and light the corresponding led."""
+    """
+    Description: Try to extract the payload from a syslog 
+                 line and light the corresponding led.
+    Parameters: None
+    Return: None
+    """
+
+    # Connect to the syslog socket created by rtl_433
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
 
-    while True:
-        line, addr = sock.recvfrom(1024)
+    while True: # Run always
+        line, addr = sock.recvfrom(1024)  # Read syslog output form
 
         try:
-            data = parse_syslog(line)
-            button = data['cmd']
-            lights_off()
+            data = parse_syslog(line)     # Parse JSON output from syslog text
+            button = data['cmd']          # Get the button pressed value
+            lights_off()                  # Reset the lights
 
-            if button in button_lst:
-                light_btn(button)
+            if button in button_lst:      # Check for a single button
+                light_btn(button)         # Set the light if only 1 button
             else:
-                check_two_buttons(button)
+                check_two_buttons(button) # Check for 2 buttons pressed
 
         except KeyError:
-            lights_off()
+            lights_off()                  # Reset lights on error
         
         except ValueError:
-            lights_off()
+            lights_off()                  # Reset lights on error
 
 def setup_GPIO():
     """Setup the required GPIO pins"""
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(18, GPIO.OUT)
-    GPIO.setup(23, GPIO.OUT)
-    GPIO.setup(24, GPIO.OUT)
-    GPIO.setup(25, GPIO.OUT)
+    for gpio_in in light_lst:
+        GPIO.setup(gpio_in, GPIO.OUT)
 
 if __name__ == "__main__":
     setup_GPIO()
