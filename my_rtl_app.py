@@ -4,13 +4,13 @@
 Description: Custom data handling example for rtl_433.
 Author: Bryan Conn
 Date: 8/18/2021
-PreReq: RTL_433 must be started prior to this script, enter `rtl_433 -F syslog:127.0.0.1:1433 -f 315M`
 """
 
 from __future__ import print_function
 import socket
 import json
 import RPi.GPIO as GPIO
+import subprocess
 
 UDP_IP = "127.0.0.1"
 UDP_PORT = 1433
@@ -103,13 +103,24 @@ def rtl_433_listen():
             lights_off()                  # Reset lights on error
 
 def setup_GPIO():
-    """Setup the required GPIO pins"""
+    """
+    Description: Setup the required GPIO pins
+    Parameters: None
+    Return: None
+    """
     GPIO.setmode(GPIO.BCM)
     for gpio_in in light_lst:
         GPIO.setup(gpio_in, GPIO.OUT)
 
+
 if __name__ == "__main__":
+    # Start the rtl application
+    rtl = subprocess.Popen(["rtl_433", "-F", "syslog:127.0.0.1:1433", "-f", "315M"])
+
+    # Prep GPIO pins
     setup_GPIO()
+
+    # Run the app
     try:
         rtl_433_listen()
     except Exception as e:
